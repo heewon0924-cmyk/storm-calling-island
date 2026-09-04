@@ -10,6 +10,7 @@
 | [02_MASTER_설정_세계관과_인물.md](./02_MASTER_설정_세계관과_인물.md) | 세계관, 8인물 + Richard Bennett 설정, A. Morgan, 과거 섬 사건, CASE 구조 |
 | [03_CASE1_MASTER_TIMELINE.md](./03_CASE1_MASTER_TIMELINE.md) | CASE 1 승선(18:30)부터 시신 발견(23:20)까지의 실제 진실 타임라인 |
 | [04_CASE1_인물동선표.md](./04_CASE1_인물동선표.md) | CASE 1 8인물 + Richard의 시간대별 실제 위치표 |
+| [05_CASE1_정보채널_설계안.md](./05_CASE1_정보채널_설계안.md) | **[제안]** Richard가 남긴 세 단서(자료·무선·노트)의 내용 설계와, 그로부터 역산한 범인안 |
 
 ## 상태 표기 규칙
 
