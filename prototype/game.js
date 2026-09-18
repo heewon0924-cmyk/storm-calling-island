@@ -33,6 +33,12 @@ function newRun(charId) {
     over: false,
   };
   Object.keys(DATA.dialogue).forEach((k) => { run.stage[k] = 0; });
+  // 처음부터 손에 쥐고 있는 것 (엘레나의 부재중 전화 등)
+  (DATA.characters[charId].start || []).forEach((id) => {
+    run.facts.add(id);
+    if (save.seen.indexOf(id) === -1) save.seen.push(id);
+  });
+  writeSave(save);
 }
 
 /* ── 유틸 ──────────────────────────────────────────── */
@@ -153,13 +159,26 @@ function present(npcId, factId) {
   const label = factId === 'rec' ? '녹음기' : DATA.facts[factId].t;
   sayAct('제시', '— ' + p.name + '에게 「' + label + '」');
 
-  if (st.present && st.present.indexOf(factId) !== -1) {
-    say(st.text);
+  // 단계와 무관한 특수 반응 (열리지 않는 문에도 반응은 있다)
+  const sp = (DATA.presentSpecial || {})[npcId];
+  const special = sp && sp[factId];
+
+  if (special && !run.done.has('sp_' + npcId + '_' + factId)) {
+    say(special.text);
+    gain(special.gives);
+    run.done.add('sp_' + npcId + '_' + factId);
+  } else if (st.present && st.present.indexOf(factId) !== -1) {
+    say((st.altText && st.altText[factId]) || st.text);
     gain(st.gives);
     run.stage[npcId] = Math.min(i + 1, stages.length - 1);
   } else {
     say('그는 그것을 본다. 그리고 아무 말도 하지 않는다.\n\n*(지금 이 사람에게 이것은 아무것도 열지 못한다.)*');
   }
+
+  // 무언가를 내보이는 데에는 대가가 있다
+  const cost = (DATA.presentCost || {})[factId];
+  if (cost) gain([cost]);
+
   spend();
 }
 
@@ -226,6 +245,7 @@ function render() {
   });
   // 인물
   Object.keys(DATA.people).forEach((id) => {
+    if (id === run.char) return;                 // 나 자신은 심문하지 않는다
     if (DATA.people[id].at !== run.place) return;
     const p = DATA.people[id];
     const wrap = document.createElement('div');
@@ -293,10 +313,12 @@ function endRun() {
   $('#judgeClock').textContent = clockStr(run.clock);
 
   const sel = $('#accuse'); sel.innerHTML = '';
-  const opts = [{ id: 'none', n: '모르겠다' }]
-    .concat(Object.keys(DATA.people).map((id) => ({ id: id, n: DATA.people[id].name })))
-    .concat([{ id: 'edward', n: '에드워드 헤이스' }, { id: 'emily', n: '에밀리 카터' }, { id: 'thomas', n: '토머스 리드' }]
-      .filter((o) => o.id !== run.char));
+  const ids = [];
+  Object.keys(DATA.people).concat(Object.keys(DATA.characters)).forEach((id) => {
+    if (id !== run.char && ids.indexOf(id) === -1) ids.push(id);
+  });
+  const nameOf = (id) => (DATA.people[id] || DATA.characters[id]).name;
+  const opts = [{ id: 'none', n: '모르겠다' }].concat(ids.map((id) => ({ id: id, n: nameOf(id) })));
   opts.forEach((o) => {
     const el = document.createElement('option');
     el.value = o.id; el.textContent = o.n; sel.appendChild(el);
@@ -312,7 +334,9 @@ function endRun() {
 function submitJudgement() {
   const accuse = $('#accuse').value;
   const disposal = $('#disposal').value;
-  const deep = has('f_match') || has('f_henry_line');
+  // 캐릭터가 자기 기준을 가지면 그것을 쓴다 (전부 충족), 없으면 공통 기준 (하나라도)
+  const rule = DATA.characters[run.char].deepIf;
+  const deep = rule ? rule.every(has) : (DATA.deepFacts || []).some(has);
   const rec = {
     char: run.char, accuse: accuse, disposal: disposal,
     henryLine: has('f_henry_line'), match: has('f_match'),
@@ -325,7 +349,7 @@ function submitJudgement() {
   $('#endcard').classList.remove('hide');
 
   const who = accuse === 'none' ? null
-    : (DATA.people[accuse] ? DATA.people[accuse].name : DATA.characters[accuse].name);
+    : (DATA.people[accuse] || DATA.characters[accuse]).name;
   const name = who ? who + objp(who) + ' 지목했다' : '아무도 지목하지 않았다';
   const dl = DATA.disposals.filter((d) => d.id === disposal)[0];
 
@@ -338,6 +362,10 @@ function submitJudgement() {
   const hooks = Array.from(run.facts)
     .filter((id) => DATA.facts[id] && DATA.facts[id].hook)
     .map((id) => DATA.facts[id].t);
+  const notes = (DATA.endnotes || []).filter((n) => has(n.need));
+  if (notes.length)
+    $('#endBody').innerHTML += '<hr>' + notes.map((n) => md(n.text)).join('');
+
   $('#endHooks').innerHTML = hooks.length
     ? '<h4>확인하지 못한 채 섬에 내린 것</h4><ul>' + hooks.map((h) => '<li>' + h + '</li>').join('') + '</ul>'
     : '<h4>확인하지 못한 채 섬에 내린 것</h4><p class="dim">없다. 알아낸 것은 많은데, 걸리는 것이 하나도 없다.</p>';
