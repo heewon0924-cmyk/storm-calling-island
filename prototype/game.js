@@ -257,7 +257,7 @@ function renderNotebook() {
     const f = DATA.facts[id]; if (!f) return;
     const known = run.facts.has(id);
     const d = document.createElement('div');
-    d.className = 'note' + (known ? '' : ' locked') + (f.key ? ' key' : '');
+    d.className = 'note' + (known ? '' : ' locked') + (f.key ? ' key' : '') + (f.hook ? ' hook' : '');
     d.innerHTML = '<b>' + f.t + '</b><span class="nd">' + f.d + '</span>' +
       (known ? '' : '<span class="lockmsg">이 회차의 나는 이것을 모른다</span>');
     nb.appendChild(d);
@@ -334,8 +334,10 @@ function submitJudgement() {
     '<p>' + md('**' + name + '.** ' + (accuse === 'none' ? '아무도 격리되지 않은 채 섬에 도착한다.' : dl.label + '.')) + '</p>' +
     '<hr><p class="lead">' + md(DATA.monologue[run.char][deep ? 'deep' : 'shallow']) + '</p>';
 
-  const hooks = ['f_radio_voice', 'f_photo_hand', 'f_memo_actor', 'f_daniel_pick', 'f_michael_rd']
-    .filter(has).map((id) => DATA.facts[id].t);
+  // 발견한 순서대로 — 마지막에 알아챈 것이 마지막에 남는다
+  const hooks = Array.from(run.facts)
+    .filter((id) => DATA.facts[id] && DATA.facts[id].hook)
+    .map((id) => DATA.facts[id].t);
   $('#endHooks').innerHTML = hooks.length
     ? '<h4>확인하지 못한 채 섬에 내린 것</h4><ul>' + hooks.map((h) => '<li>' + h + '</li>').join('') + '</ul>'
     : '<h4>확인하지 못한 채 섬에 내린 것</h4><p class="dim">없다. 알아낸 것은 많은데, 걸리는 것이 하나도 없다.</p>';

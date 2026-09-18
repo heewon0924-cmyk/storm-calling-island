@@ -117,7 +117,7 @@ select{
 .btn:hover{background:var(--warm);color:var(--bg)}
 .lead{font-size:15.5px;line-height:1.95}
 #endHooks ul{padding-left:18px;margin:6px 0}
-#endHooks li{color:var(--key);font-size:13.5px;margin-bottom:4px}
+#endHooks li{color:var(--red);font-size:13.5px;margin-bottom:4px}
 #endNext{margin-top:22px;border-top:1px solid var(--line);padding-top:14px;font-size:13.5px}
 .tiny{background:none;border:0;color:var(--dim);font:inherit;font-size:11px;cursor:pointer;
   text-decoration:underline;margin-left:14px}
@@ -128,3 +128,8 @@ select{
 .sheet{max-width:520px;margin:6vh auto;background:var(--panel);border:1px solid var(--line);padding:20px}
 .sheet .act{margin-bottom:5px}
 .sheet .cancel{border-style:dashed;color:var(--dim);margin-top:12px}
+
+/* 후크 — 알아챘지만 확인하지 못한 것 */
+.note.hook{border-left:2px solid var(--red);padding-left:10px}
+.note.hook b{color:var(--red)}
+.note.hook b::after{content:' ?';opacity:.6}
