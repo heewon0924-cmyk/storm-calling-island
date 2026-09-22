@@ -198,7 +198,9 @@ function present(npcId, factId) {
   }
 
   // 무언가를 내보이는 데에는 대가가 있다
-  const cost = (CH.presentCost || {})[factId];
+  // 대가는 인물별로 다를 수 있다 — 내놓는 것이 자기 것인 사람에게만 값이 붙는다
+  let cost = (CH.presentCost || {})[factId];
+  if (cost && typeof cost === 'object') cost = canChar(cost.who) ? cost.fact : null;
   if (cost) gain([cost]);
 
   spend();
@@ -242,11 +244,12 @@ function availableCompares() {
 }
 
 function render() {
-  if (run.over) return;
+  // 머리글은 마지막 행동까지 반영한다. 회차가 끝났으면 선택지는 다시 그리지 않는다.
   $('#clock').textContent = clockStr(run.clock);
   $('#left').textContent = run.left;
   $('#who').textContent = DATA.characters[run.char].name;
   $('#placeName').textContent = CH.places[run.place].name;
+  if (run.over) return;
 
   // 이동
   const mv = $('#moves'); mv.innerHTML = '';
