@@ -15,3 +15,7 @@ export_credentials.cfg
 .mono/
 data_*/
 mono_crash.*.json
+
+# 프로토타입 개발 도구
+prototype/node_modules/
+prototype/package*.json

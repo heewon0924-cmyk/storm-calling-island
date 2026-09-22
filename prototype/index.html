@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>폭풍을 부르는 섬 이야기 — 프로토타입</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 시작 -->
+  <section id="start">
+    <h1>폭풍을 부르는 섬 이야기 <span>— 1차 프로토타입</span></h1>
+    <p class="sub">CASE 1 · 23:20 시신 발견부터 배가 섬에 닿을 때까지 · 행동 12회</p>
+    <h3>누구로 이 밤을 볼 것인가</h3>
+    <div id="chars"></div>
+    <div id="carry"></div>
+    <p class="sub" style="margin-top:28px">
+      같은 밤을 여러 번 봅니다. <b>캐릭터의 지식은 매 회차 초기화되고, 당신의 수첩은 누적됩니다.</b>
+      <button id="wipe" class="tiny">기록 지우기</button>
+    </p>
+  </section>
+
+  <!-- 플레이 -->
+  <section id="play" class="hide">
+    <div class="bar">
+      <div><div class="lbl">시각</div><b id="clock">23:20</b></div>
+      <div><div class="lbl">남은 행동</div><b id="left">12</b></div>
+      <div><div class="lbl">지금 나는</div><b id="who" style="font-size:14px"></b></div>
+    </div>
+    <div class="cols">
+      <div>
+        <div id="moves"></div>
+        <div id="placeName"></div>
+        <div id="acts"></div>
+        <div id="log"></div>
+      </div>
+      <aside id="nbwrap">
+        <h3>수첩</h3>
+        <div id="notebook"></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- 판단 -->
+  <section id="judge" class="hide">
+    <h1>배가 섬에 닿는다</h1>
+    <p class="sub"><span id="judgeClock"></span> · 더 알아볼 시간이 없다. 지금까지 알아낸 것으로 판단해야 한다.</p>
+    <p>이것은 정답 맞히기가 아니다. <b>당신의 판단이 섬에서 벌어질 일을 바꾼다.</b></p>
+    <label>누구를 의심하는가</label>
+    <select id="accuse"></select>
+    <label>그를 어떻게 할 것인가</label>
+    <select id="disposal"></select>
+    <button id="submit" class="btn">섬에 내린다</button>
+  </section>
+
+  <!-- 결말 -->
+  <section id="endcard" class="hide endwrap">
+    <h1 id="endTitle"></h1>
+    <div id="endBody"></div>
+    <div id="endHooks"></div>
+    <div id="endNext"></div>
+    <button id="toIsland" class="btn">섬으로 간다</button>
+    <button id="again" class="btn ghost">다시 이 밤으로</button>
+  </section>
+
+  <!-- CASE 2 — 플래그가 읽히는 곳 -->
+  <section id="island" class="hide endwrap">
+    <h1>CASE 2 — 섬</h1>
+    <p class="sub">여기서 벌어지는 일은 당신이 배에서 한 일이 정합니다.</p>
+    <div id="islandBody"></div>
+    <button id="toCase2" class="btn">섬을 돈다</button>
+    <button id="again2" class="btn ghost">다시 이 밤으로</button>
+  </section>
+
+  <!-- 최종 결말 -->
+  <section id="final" class="hide endwrap">
+    <h1 id="finalTitle">폭풍이 지났다</h1>
+    <div id="finalMono"></div>
+    <div id="islandEnd"></div>
+    <div id="islandTruth"></div>
+    <div id="finalHooks"></div>
+    <div id="finalNext"></div>
+    <button id="again3" class="btn">다시 이 밤으로</button>
+  </section>
+
+</div>
+<div id="modal"></div>
+<script src="data.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
