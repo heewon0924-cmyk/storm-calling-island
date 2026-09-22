@@ -115,6 +115,17 @@ select{
   padding:10px 20px;font:inherit;font-size:14px;cursor:pointer;margin-top:22px;letter-spacing:.05em;
 }
 .btn:hover{background:var(--warm);color:var(--bg)}
+.btn.ghost{border-color:var(--line);color:var(--dim);margin-left:10px}
+.btn.ghost:hover{background:transparent;border-color:var(--dim);color:var(--ink)}
+
+/* CASE 2 — 플래그가 읽히는 곳 */
+#island h2{font-size:13px;color:var(--dim);letter-spacing:.1em;font-weight:400;
+  margin:30px 0 8px;border-top:1px solid var(--line);padding-top:16px}
+#islandEnd{margin-top:34px;border-top:2px solid var(--warm);padding-top:20px}
+#islandEnd h2{border:0;padding:0;margin:0 0 10px;color:var(--warm);font-size:15px;letter-spacing:.06em}
+#islandTruth{margin-top:30px;border-left:2px solid var(--red);padding:2px 0 2px 18px}
+#islandTruth h2{border:0;padding:0;margin:0 0 10px;color:var(--red);font-size:14px}
+#islandNote{margin-top:34px;border-top:1px solid var(--line);padding-top:14px;font-size:12.5px}
 .lead{font-size:15.5px;line-height:1.95}
 #endHooks ul{padding-left:18px;margin:6px 0}
 #endHooks li{color:var(--red);font-size:13.5px;margin-bottom:4px}

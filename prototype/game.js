@@ -427,9 +427,59 @@ function start(id) {
   move('scene');
 }
 
+/* ── CASE 2 — 플래그를 읽는다 ── 09번 §5·§6 ──────────
+ * 챕터 본편은 없다. 여기 있는 것은 플래그가 섬을 바꾸는 부분뿐이다. */
+function flagMatch(cond, f) {
+  return Object.keys(cond || {}).every((k) => f[k] === cond[k]);
+}
+function firstMatch(list, f) {
+  for (let i = 0; i < list.length; i++) if (flagMatch(list[i].if || list[i].when, f)) return list[i];
+  return null;
+}
+// wary 가 붙은 항목은 ⑥이 켜진 회차에만 뒷문장이 따라온다
+function withWary(entry, f) {
+  return entry.text + (f.wary && entry.wary ? entry.wary : '');
+}
+
+function renderIsland() {
+  const c2 = DATA.case2;
+  const f = save.runs[save.runs.length - 1];
+  let html = '<div class="lead">' + md(c2.arrive) + '</div>';
+  if (c2.byChar[f.char]) html += md(c2.byChar[f.char]);
+  html += '<h2>부두</h2>' + md(c2.arthur);
+
+  c2.reads.forEach((r) => {
+    const hit = firstMatch(r.when, f);
+    if (!hit || !hit.text) return;
+    html += '<h2>' + r.title + '</h2>' + md(withWary(hit, f));
+  });
+  $('#islandBody').innerHTML = html;
+
+  const end = firstMatch(c2.endings, f);
+  $('#islandEnd').innerHTML = '<h2>' + end.label + '</h2>' + md(withWary(end, f));
+
+  // ④+⑤ 는 회차를 넘어 누적된다 — 09번 §6 D
+  const held = c2.truth.need.every((k) => save.runs.some((r) => r[k]));
+  $('#islandTruth').innerHTML = held
+    ? '<h2>' + c2.truth.label + '</h2>' + md(c2.truth.text)
+    : '<div class="dim">' + md(c2.locked) + '</div>';
+  $('#islandTruth').style.borderLeftColor = held ? '' : 'transparent';
+
+  $('#islandNote').innerHTML = md(c2.note);
+}
+
+function toIsland() {
+  $('#endcard').classList.add('hide');
+  $('#island').classList.remove('hide');
+  window.scrollTo(0, 0);
+  renderIsland();
+}
+
 function restart() {
   $('#endcard').classList.add('hide');
+  $('#island').classList.add('hide');
   $('#start').classList.remove('hide');
+  window.scrollTo(0, 0);
   renderStart();
 }
 function wipe() {
@@ -440,6 +490,8 @@ function wipe() {
 window.addEventListener('DOMContentLoaded', () => {
   $('#submit').onclick = submitJudgement;
   $('#again').onclick = restart;
+  $('#again2').onclick = restart;
+  $('#toIsland').onclick = toIsland;
   $('#wipe').onclick = wipe;
   $('#modal').onclick = (e) => { if (e.target.id === 'modal') e.target.classList.remove('on'); };
   renderStart();
