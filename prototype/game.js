@@ -375,9 +375,7 @@ function submitJudgement() {
   const accuse = $('#accuse').value;
   const disposal = $('#disposal').value;
   // 캐릭터가 자기 기준을 가지면 그것을 쓴다 (전부 충족), 없으면 공통 기준 (하나라도)
-  const rule = (CH.deepIf || {})[run.char];
-  const blocked = ((CH.deepNot || {})[run.char] || []).some(has);
-  const deep = !blocked && (rule ? rule.every(has) : (DATA.deepFacts || []).some(has));
+  const deep = isDeep();
   const rec = {
     char: run.char, accuse: accuse, disposal: disposal,
     henryLine: has('f_henry_line'), match: has('f_match'),
@@ -404,7 +402,8 @@ function submitJudgement() {
 
   // 발견한 순서대로 — 마지막에 알아챈 것이 마지막에 남는다
   const hooks = openHooks();
-  const notes = (CH.endnotes || []).filter((n) => has(n.need));
+  const notes = (CH.endnotes || []).filter((n) =>
+    needList(n.need).every(has) && !(n.not && has(n.not)));
   if (notes.length)
     $('#endBody').innerHTML += '<hr>' + notes.map((n) => md(n.text)).join('');
 
@@ -454,6 +453,15 @@ function start(id, chapterId, carry) {
   move(CH.from);
 }
 
+function needList(n) { return Array.isArray(n) ? n : [n]; }
+
+/* 깊은 회차인가 — 두 챕터가 같은 규칙을 쓴다 */
+function isDeep() {
+  if (((CH.deepNot || {})[run.char] || []).some(has)) return false;
+  const rule = (CH.deepIf || {})[run.char];
+  return rule ? rule.every(has) : (DATA.deepFacts || []).some(has);
+}
+
 function hookList(hooks, title) {
   return '<h4>' + title + '</h4>' + (hooks.length
     ? '<ul>' + hooks.map((h) => '<li>' + esc(h) + '</li>').join('') + '</ul>'
@@ -499,8 +507,7 @@ function renderIsland() {
 function renderFinal() {
   const c2 = DATA.island;
   const f = save.runs[save.runs.length - 1];
-  const rule = (CH.deepIf || {})[run.char];
-  const deep = rule ? rule.every(has) : (DATA.deepFacts || []).some(has);
+  const deep = isDeep();
 
   $('#final').classList.remove('hide');
   window.scrollTo(0, 0);
@@ -515,7 +522,8 @@ function renderFinal() {
     : '<div class="dim">' + md(c2.locked) + '</div>';
   $('#islandTruth').style.borderLeftColor = held ? '' : 'transparent';
 
-  const notes = (CH.endnotes || []).filter((n) => has(n.need));
+  const notes = (CH.endnotes || []).filter((n) =>
+    needList(n.need).every(has) && !(n.not && has(n.not)));
   $('#finalMono').innerHTML = md(CH.monologue[run.char][deep ? 'deep' : 'shallow']) +
     (notes.length ? '<hr>' + notes.map((n) => md(n.text)).join('') : '');
   $('#finalHooks').innerHTML = hookList(openHooks(), '확인하지 못한 채 섬을 떠난 것');
