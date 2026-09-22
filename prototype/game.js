@@ -27,8 +27,8 @@ function newRun(charId, chapterId, carry) {
   run = {
     char: charId,
     chapter: chapterId,
-    left: DATA.budget.actions,
-    clock: DATA.budget.startClock,
+    left: (CH.budget && CH.budget.actions) || DATA.budget.actions,
+    clock: (CH.budget && CH.budget.startClock) || DATA.budget.startClock,
     place: CH.from,
     facts: new Set(),
     stage: {},       // npcId -> 진행 단계
@@ -96,8 +96,8 @@ function sayAct(verb, label, free) {
 
 /* 수첩 획득 알림 */
 function sayFact(f) {
-  push('<span class="tag">수첩</span> <b>' + esc(f.t) + '</b>' +
-       '<br><span class="dim">' + esc(f.d) + '</span>', 'got');
+  push('<span class="tag">수첩</span> <b>' + inline(esc(f.t)) + '</b>' +
+       '<br><span class="dim">' + inline(esc(f.d)) + '</span>', 'got');
 }
 
 function gain(ids) {
@@ -113,7 +113,7 @@ function gain(ids) {
 /* ── 행동 소모 ─────────────────────────────────────── */
 function spend() {
   run.left--;
-  run.clock += DATA.budget.minutesPerAction;
+  run.clock += (CH.budget && CH.budget.minutesPerAction) || DATA.budget.minutesPerAction;
   // 지연 회신 도착
   run.pending = run.pending.filter((p) => {
     p.in--;
@@ -289,7 +289,7 @@ function renderNotebook() {
     const known = run.facts.has(id);
     const d = document.createElement('div');
     d.className = 'note' + (known ? '' : ' locked') + (f.key ? ' key' : '') + (f.hook ? ' hook' : '');
-    d.innerHTML = '<b>' + f.t + '</b><span class="nd">' + f.d + '</span>' +
+    d.innerHTML = '<b>' + inline(esc(f.t)) + '</b><span class="nd">' + inline(esc(f.d)) + '</span>' +
       (known ? '' : '<span class="lockmsg">이 회차의 나는 이것을 모른다</span>');
     nb.appendChild(d);
   });
@@ -424,7 +424,7 @@ function start(id, chapterId, carry) {
   const c = DATA.characters[id];
   push('<b>' + esc(c.name) + '</b> · ' + esc(c.job), 'act');
   say(CH.openings[id]);
-  say(CH.open.replace('{n}', DATA.budget.actions));
+  say(CH.open.replace('{n}', run.left));
   move(CH.from);
 }
 
