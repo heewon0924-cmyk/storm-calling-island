@@ -213,9 +213,19 @@ function move(id) {
 function availableActions() {
   return CH.actions.filter((a) =>
     a.at === run.place && canChar(a.who) && !run.done.has(a.id) &&
-    (!a.need || a.need.every(has))
+    (!a.need || a.need.every(has)) && flagOk(a.flagIf, a.flagNot)
   );
 }
+/* 앞 챕터에서 한 일이 이 챕터의 선택지를 바꾼다 — 09번 §5 */
+function lastFlags() { return save.runs[save.runs.length - 1] || null; }
+function flagOk(yes, no) {
+  if (!yes && !no) return true;
+  const f = lastFlags(); if (!f) return false;
+  const test = (o) => Object.keys(o).every((k) =>
+    Array.isArray(o[k]) ? o[k].indexOf(f[k]) !== -1 : f[k] === o[k]);
+  return (!yes || test(yes)) && (!no || !test(no));
+}
+
 function availableCompares() {
   return CH.compares.filter((c) => !run.done.has(c.id) && c.need.every(has));
 }
@@ -358,6 +368,8 @@ function submitJudgement() {
     char: run.char, accuse: accuse, disposal: disposal,
     henryLine: has('f_henry_line'), match: has('f_match'),
     wary: has('f_caught'),
+    // 09번 §5 ③ : 처분이 정하는 것은 결국 이것 하나다
+    michaelFree: !(accuse === 'michael' && disposal === 'isolate'),
     facts: run.facts.size, deep: deep,
   };
   save.runs.push(rec);
