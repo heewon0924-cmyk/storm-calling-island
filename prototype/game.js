@@ -156,7 +156,8 @@ function present(npcId, factId) {
   const i = run.stage[npcId];
   const st = stages[Math.min(i, stages.length - 1)];
   const p = DATA.people[npcId];
-  const label = factId === 'rec' ? '녹음기' : DATA.facts[factId].t;
+  const item = (DATA.presentItems || []).filter((it) => it.id === factId)[0];
+  const label = item ? item.t : DATA.facts[factId].t;
   sayAct('제시', '— ' + p.name + '에게 「' + label + '」');
 
   // 단계와 무관한 특수 반응 (열리지 않는 문에도 반응은 있다)
@@ -286,7 +287,11 @@ function renderNotebook() {
 
 function openPresent(npcId) {
   const items = [];
-  if (run.char === 'thomas') items.push({ id: 'rec', t: '소형 녹음기' });
+  (DATA.presentItems || []).forEach((it) => {
+    if (it.who && it.who.indexOf(run.char) === -1) return;
+    if (it.need && !it.need.every(has)) return;
+    items.push({ id: it.id, t: it.t });
+  });
   run.facts.forEach((id) => items.push({ id: id, t: DATA.facts[id].t }));
   if (!items.length) { say('*(보여줄 것이 없다.)*'); return; }
   const m = $('#modal');
