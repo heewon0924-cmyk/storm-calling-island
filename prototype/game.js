@@ -29,6 +29,7 @@ function newRun(charId) {
     facts: new Set(),
     stage: {},       // npcId -> 진행 단계
     done: new Set(), // 1회성 행동 id
+    spoke: new Set(),// 말을 건 사람 — 위험 교환이 읽는다
     pending: [],     // 지연 회신
     over: false,
   };
@@ -126,9 +127,11 @@ function spend() {
 /* ── 행동 실행 ─────────────────────────────────────── */
 function doAction(act) {
   sayAct(act.verb, '— ' + act.label);
-  say(act.text);
+  // 위험 교환: 이미 그 사람에게 말을 걸었다면 다른 일이 벌어진다
+  const risk = act.risk && run.spoke.has(act.risk.seenBy) ? act.risk : null;
+  say((risk || act).text);
   if (act.delay) run.pending.push({ act: act, in: act.delay });
-  else gain(act.gives);
+  else gain((risk || act).gives);
   if (!act.repeat) run.done.add(act.id);
   spend();
 }
@@ -138,6 +141,7 @@ function question(npcId) {
   let i = run.stage[npcId];
   let st = stages[Math.min(i, stages.length - 1)];
   const p = DATA.people[npcId];
+  run.spoke.add(npcId);
   sayAct('질문', '— ' + p.name);
 
   const needOk = !st.need || (st.anyNeed ? st.need.some(has) : st.need.every(has));
@@ -156,6 +160,7 @@ function present(npcId, factId) {
   const i = run.stage[npcId];
   const st = stages[Math.min(i, stages.length - 1)];
   const p = DATA.people[npcId];
+  run.spoke.add(npcId);
   const item = (DATA.presentItems || []).filter((it) => it.id === factId)[0];
   const label = item ? item.t : DATA.facts[factId].t;
   sayAct('제시', '— ' + p.name + '에게 「' + label + '」');
@@ -340,11 +345,14 @@ function submitJudgement() {
   const accuse = $('#accuse').value;
   const disposal = $('#disposal').value;
   // 캐릭터가 자기 기준을 가지면 그것을 쓴다 (전부 충족), 없으면 공통 기준 (하나라도)
-  const rule = DATA.characters[run.char].deepIf;
-  const deep = rule ? rule.every(has) : (DATA.deepFacts || []).some(has);
+  const c = DATA.characters[run.char];
+  const blocked = (c.deepNot || []).some(has);
+  const deep = !blocked &&
+    (c.deepIf ? c.deepIf.every(has) : (DATA.deepFacts || []).some(has));
   const rec = {
     char: run.char, accuse: accuse, disposal: disposal,
     henryLine: has('f_henry_line'), match: has('f_match'),
+    wary: has('f_caught'),
     facts: run.facts.size, deep: deep,
   };
   save.runs.push(rec);
