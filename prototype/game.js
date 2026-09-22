@@ -130,10 +130,21 @@ function spend() {
 }
 
 /* ── 행동 실행 ─────────────────────────────────────── */
+/* 위험 교환이 터지는가 — 조건은 챕터마다 다르다 (12번 §5 5차·11차)
+ *   seenBy : 그 사람에게 말을 건 적이 있으면 터진다 (배)
+ *   flagIf : 앞 챕터의 플래그가 맞을 때만 위험하다  (섬)
+ *   unless : 이것을 알고 있으면 안전하다            (섬) */
+function riskFires(r) {
+  if (!r) return false;
+  if (r.unless && r.unless.some(has)) return false;
+  if (r.flagIf && !flagOk(r.flagIf)) return false;
+  if (r.seenBy && !run.spoke.has(r.seenBy)) return false;
+  return true;
+}
+
 function doAction(act) {
   sayAct(act.verb, '— ' + act.label);
-  // 위험 교환: 이미 그 사람에게 말을 걸었다면 다른 일이 벌어진다
-  const risk = act.risk && run.spoke.has(act.risk.seenBy) ? act.risk : null;
+  const risk = riskFires(act.risk) ? act.risk : null;
   say((risk || act).text);
   if (act.delay) run.pending.push({ act: act, in: act.delay });
   else gain((risk || act).gives);
