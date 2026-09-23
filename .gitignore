@@ -1,3 +1,4 @@
+# 본편 엔진은 Godot 4 입니다 — 01번 §16-F
 # Godot 4+ specific ignores
 .godot/
 .nomedia
@@ -19,3 +20,6 @@ mono_crash.*.json
 # 프로토타입 개발 도구
 prototype/node_modules/
 prototype/package*.json
+
+# 내용 내보내기 결과 (tools/data-to-json.js 가 만든다)
+tools/data.json
