@@ -21,8 +21,10 @@ let save = loadSave();
 let run = null;
 let CH = null;      // 지금 보고 있는 챕터
 let carried = [];   // CASE 1 에서 섬으로 들고 가는 것
+let runNo = 0;      // 회차는 배에서 시작한다. 섬은 같은 회차의 뒷장이다 — 01번 §16
 
 function newRun(charId, chapterId, carry) {
+  if (chapterId === 'case1') runNo = save.runs.length + 1;
   CH = DATA.chapters[chapterId];
   run = {
     char: charId,
@@ -82,6 +84,7 @@ const inline = (s) => s
 /* 인용(>)은 문단 단위로 처리한 뒤 이스케이프한다 */
 function md(s) {
   return s.split('\n\n').map((b) => {
+    if (b.trim() === '---') return '<hr>';
     if (b.indexOf('> ') === 0)
       return '<blockquote>' + inline(esc(b.replace(/^> ?/gm, ''))).replace(/\n/g, '<br>') + '</blockquote>';
     return '<p>' + inline(esc(b)).replace(/\n/g, '<br>') + '</p>';
@@ -463,7 +466,7 @@ function submitJudgement() {
     '개 · 수첩에 쌓인 것 ' + save.seen.length + '개</p>' +
     (rest.length
       ? '<p>' + md('아직 **' + rest.map((c) => DATA.characters[c].name).join(', ') + '**(으)로는 이 밤을 보지 않았다.') + '</p>'
-      : '<p>' + md('세 사람으로 다 보았다. 그런데도 **확신은 없다.**') + '</p>');
+      : '<p>' + md('네 사람으로 다 보았다. 그런데도 **확신은 없다.**') + '</p>');
 }
 
 /* ── 시작 화면 ─────────────────────────────────────── */
@@ -492,6 +495,7 @@ function start(id, chapterId, carry) {
   ['#start', '#endcard', '#island', '#judge'].forEach((k) => $(k).classList.add('hide'));
   $('#play').classList.remove('hide');
   $('#log').innerHTML = '';
+  $('#chapter').textContent = CH.title + ' · ' + runNo + '회차';
   window.scrollTo(0, 0);
   const c = DATA.characters[id];
   push('<b>' + esc(c.name) + '</b> · ' + esc(c.job), 'act');
@@ -565,7 +569,8 @@ function renderFinal() {
   // ④+⑤ 는 회차를 넘어 누적된다 — 09번 §6 D
   const held = c2.truth.need.every((k) => save.runs.some((r) => r[k]));
   $('#islandTruth').innerHTML = held
-    ? '<h2>' + c2.truth.label + '</h2>' + md(c2.truth.text)
+    ? '<h2>' + c2.truth.label + '</h2>' + md(c2.truth.text) +
+      (c2.truth.after ? '<div class="closing">' + md(c2.truth.after) + '</div>' : '')
     : '<div class="dim">' + md(c2.locked) + '</div>';
   $('#islandTruth').style.borderLeftColor = held ? '' : 'transparent';
 
@@ -587,6 +592,9 @@ function renderFinal() {
     (rest.length
       ? md('아직 **' + rest.map((c) => DATA.characters[c].name).join(', ') + '**(으)로는 이 밤을 보지 않았다.')
       : md('네 사람으로 다 보았다. 그런데도 **확신은 없다.**'));
+
+  // 이야기는 D 에서 끝난다. 회차는 그 뒤로도 쌓을 수 있다 — 01번 §16
+  $('#again3').textContent = held ? '그래도 한 번 더 본다' : '다시 이 밤으로';
 }
 
 function toIsland() {
