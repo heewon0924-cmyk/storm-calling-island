@@ -61,6 +61,19 @@ function objp(name) {
 }
 const canChar = (who) => !who || who.length === 0 || who.indexOf(run.char) !== -1;
 
+/* 07번 §6-C ⑦ — 이 회차의 내가 내놓을 수 있는 「거짓말」과 그 값 */
+function ownLieItem() {
+  return (CH.presentItems || []).filter((it) => it.own && canChar(it.who))[0] || null;
+}
+function ownLieFact() {
+  const it = ownLieItem();
+  if (!it) return null;
+  let c = (CH.presentCost || {})[it.id];
+  if (c && typeof c === 'object') c = canChar(c.who) ? c.fact : null;
+  return c || null;
+}
+function toldOwn() { return (DATA.ownLieFacts || []).some(has); }
+
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const inline = (s) => s
   .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -178,6 +191,7 @@ function present(npcId, factId) {
   const p = CH.people[npcId];
   run.spoke.add(npcId);
   const item = (CH.presentItems || []).filter((it) => it.id === factId)[0];
+  const own = !!(item && item.own);
   const label = item ? item.t : DATA.facts[factId].t;
   sayAct('제시', '— ' + p.name + '에게 「' + label + '」');
 
@@ -189,10 +203,19 @@ function present(npcId, factId) {
     say(special.text);
     gain(special.gives);
     run.done.add('sp_' + npcId + '_' + factId);
+  } else if (own && st.ownText) {
+    // 누가 먼저 말하면 열리는 단계가 있다 — 증거가 아니라 순서로 여는 문.
+    // 말로 연 문은 말까지만 여는 경우가 있다 (ownGives).
+    say(st.ownText);
+    gain(st.ownGives || st.gives);
+    run.stage[npcId] = Math.min(i + 1, stages.length - 1);
   } else if (st.present && st.present.indexOf(factId) !== -1) {
     say((st.altText && st.altText[factId]) || st.text);
     gain(st.gives);
     run.stage[npcId] = Math.min(i + 1, stages.length - 1);
+  } else if (own) {
+    // 아무것도 열지 못해도 말한 것은 돌아오지 않는다
+    say(item.miss || '그 사람은 듣는다. 그리고 아무 말도 하지 않는다.');
   } else {
     say('그는 그것을 본다. 그리고 아무 말도 하지 않는다.\n\n*(지금 이 사람에게 이것은 아무것도 열지 못한다.)*');
   }
@@ -364,6 +387,22 @@ function endRun() {
     el.value = o.id; el.textContent = o.n; sel.appendChild(el);
   });
 
+  // 07번 §6-C 「자신이 숨긴 것을 스스로 밝힐 것인가」
+  const ow = $('#own'); ow.innerHTML = '';
+  const item = ownLieItem();
+  if (!item) {
+    ow.innerHTML = '<p class="dim">이 회차의 나는 감출 것이 없다.</p>';
+  } else if (toldOwn()) {
+    ow.innerHTML = '<p class="dim">이미 말해버렸다 — ' + esc(item.t.replace(/^— /, '')) +
+      '<br>되돌릴 수 없다.</p>';
+  } else {
+    ow.innerHTML = '<label class="chk"><input type="checkbox" id="tellOwn"> ' +
+      esc(item.t.replace(/^— /, '')) +
+      ' — 사람들 앞에서 함께 밝힌다</label>' +
+      '<p class="dim">행동을 쓰지 않는다. 대신 아무것도 열어주지 않는다. ' +
+      '<b>배 위에서 먼저 말했다면 열렸을 문이 있었다.</b></p>';
+  }
+
   const dp = $('#disposal'); dp.innerHTML = '';
   DATA.disposals.forEach((d) => {
     const el = document.createElement('option');
@@ -374,12 +413,20 @@ function endRun() {
 function submitJudgement() {
   const accuse = $('#accuse').value;
   const disposal = $('#disposal').value;
+  // 배에서 말하지 않았다면 여기서 마지막으로 한 번 더 기회가 있다
+  const tell = $('#tellOwn');
+  if (tell && tell.checked && !toldOwn()) {
+    const f = ownLieFact();
+    if (f) { run.facts.add(f); if (save.seen.indexOf(f) === -1) save.seen.push(f); }
+  }
   // 캐릭터가 자기 기준을 가지면 그것을 쓴다 (전부 충족), 없으면 공통 기준 (하나라도)
   const deep = isDeep();
   const rec = {
     char: run.char, accuse: accuse, disposal: disposal,
     henryLine: has('f_henry_line'), match: has('f_match'),
     wary: has('f_caught'),
+    // 09번 §5 ⑦ : 자기 거짓말을 스스로 밝혔는가
+    told: toldOwn(),
     // 09번 §5 ③ : 처분이 정하는 것은 결국 이것 하나다
     michaelFree: !(accuse === 'michael' && disposal === 'isolate'),
     facts: run.facts.size, deep: deep,
