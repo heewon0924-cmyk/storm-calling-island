@@ -160,3 +160,12 @@ select{
 #chapter { color:var(--dim); font-size:12px; letter-spacing:.08em; margin:0 0 10px }
 .closing { border-top:1px solid var(--line); margin-top:22px; padding-top:18px }
 .closing strong { color:var(--warm) }
+
+/* 대조판 — 두 장을 집는다 */
+.sheet .pick { position:relative; padding-left:30px }
+.sheet .pick::before { content:''; position:absolute; left:11px; top:50%; margin-top:-5px;
+  width:10px; height:10px; border:1px solid var(--line) }
+.sheet .pick.on { border-color:var(--warm); color:var(--key) }
+.sheet .pick.on::before { background:var(--warm); border-color:var(--warm) }
+.sheet .go { margin-top:12px; border-color:var(--warm); color:var(--key) }
+.sheet .go:disabled { border-color:var(--line); color:var(--dim); cursor:default }

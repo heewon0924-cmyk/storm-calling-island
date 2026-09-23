@@ -269,6 +269,28 @@ function availableCompares() {
   return CH.compares.filter((c) => !run.done.has(c.id) && c.need.every(has));
 }
 
+/* ── 대조판 ── 01번 §16-D
+ * 판에 올릴 수 있는 것은 수첩 전체가 아니라 대조가 요구하는 줄 중 지금 아는 것이다.
+ * 한 회차에 7~9장이므로 플레이어가 직접 집을 수 있다. */
+function boardItems() {
+  const s = new Set();
+  (CH.compares || []).forEach((c) => c.need.forEach((n) => s.add(n)));
+  return Array.from(s).filter(has);
+}
+
+function tryCompare(ids) {
+  const set = new Set(ids);
+  const hit = (CH.compares || []).filter((c) =>
+    !run.done.has(c.id) && c.need.length === set.size && c.need.every((n) => set.has(n)))[0];
+  if (hit) { compare(hit); return; }
+  // 이어지지 않아도 값은 없다 — 06번 §3. 대신 그 사람이 일하는 방식이 나온다.
+  const t = ids.map((id) => DATA.facts[id].t);
+  const tpl = (DATA.compareMiss || {})[run.char] || '*(이어지지 않는다.)*';
+  sayAct('대조', '— 맞춰본다', true);
+  say(tpl.replace('{a}', t[0]).replace('{b}', t.slice(1).join('」 그리고 「')));
+  render();
+}
+
 function render() {
   // 머리글은 마지막 행동까지 반영한다. 회차가 끝났으면 선택지는 다시 그리지 않는다.
   $('#clock').textContent = clockStr(run.clock);
@@ -290,13 +312,15 @@ function render() {
 
   // 행동
   const ac = $('#acts'); ac.innerHTML = '';
-  availableCompares().forEach((c) => {
+  const board = boardItems();
+  if (board.length >= 2) {
     const b = document.createElement('button');
     b.className = 'act free-act';
-    b.innerHTML = '<span class="v">대조</span> ' + c.label + ' <span class="free">무료</span>';
-    b.onclick = () => compare(c);
+    b.innerHTML = '<span class="v">대조</span> 두 장을 맞춰본다 ' +
+      '<span class="dim">(' + board.length + '장)</span> <span class="free">무료</span>';
+    b.onclick = () => openBoard();
     ac.appendChild(b);
-  });
+  }
   availableActions().forEach((a) => {
     const b = document.createElement('button');
     b.className = 'act';
@@ -343,6 +367,41 @@ function renderNotebook() {
       (known ? '' : '<span class="lockmsg">이 회차의 나는 이것을 모른다</span>');
     nb.appendChild(d);
   });
+}
+
+function openBoard() {
+  const items = boardItems();
+  const pick = [];
+  const m = $('#modal');
+  m.innerHTML = '<div class="sheet"><h3>무엇과 무엇을 맞춰볼까</h3>' +
+    '<p class="dim" style="margin:0 0 12px">두 장, 또는 세 장. 행동을 쓰지 않는다.</p></div>';
+  const sh = m.querySelector('.sheet');
+  const go = document.createElement('button');
+  const sync = () => {
+    go.disabled = pick.length < 2;
+    go.textContent = pick.length < 2 ? '두 장을 고른다' : '맞춰본다 (' + pick.length + '장)';
+  };
+  items.forEach((id) => {
+    const b = document.createElement('button');
+    b.className = 'act pick';
+    b.textContent = DATA.facts[id].t;
+    b.onclick = () => {
+      const i = pick.indexOf(id);
+      if (i === -1) { if (pick.length >= 3) return; pick.push(id); b.classList.add('on'); }
+      else { pick.splice(i, 1); b.classList.remove('on'); }
+      sync();
+    };
+    sh.appendChild(b);
+  });
+  go.className = 'act go';
+  go.onclick = () => { if (pick.length >= 2) { m.classList.remove('on'); tryCompare(pick); } };
+  sh.appendChild(go);
+  const c = document.createElement('button');
+  c.className = 'act cancel'; c.textContent = '그만둔다';
+  c.onclick = () => m.classList.remove('on');
+  sh.appendChild(c);
+  sync();
+  m.classList.add('on');
 }
 
 function openPresent(npcId) {
