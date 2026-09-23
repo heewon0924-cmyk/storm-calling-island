@@ -1,4 +1,4 @@
-# 본편 엔진은 Godot 4 입니다 — 01번 §16-F
+# 웹으로 만들고 나중에 Godot 4 로 이식합니다 — 01번 §16-F
 # Godot 4+ specific ignores
 .godot/
 .nomedia

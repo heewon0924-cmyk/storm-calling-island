@@ -1,6 +1,6 @@
 /* data.js → data.json
  *
- * 01번 §16-F — 본편은 Godot 4 입니다. 규칙(game.js)은 다시 쓰지만
+ * 01번 §16-F — 웹으로 만들고 나중에 Godot 4 로 이식합니다. 화면(ui.js)은 다시 쓰지만
  * 내용(data.js)은 다시 쓰지 않습니다. 이 스크립트가 그 다리입니다.
  *
  *   node tools/data-to-json.js            → tools/data.json
