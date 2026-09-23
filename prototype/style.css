@@ -155,3 +155,8 @@ select{
 .chk input { margin-top:4px; flex:none; }
 #own { margin-bottom:18px; }
 #own .dim { font-size:12px; margin:6px 0 0; }
+
+/* 장 표시 · 이야기가 끝나는 자리 */
+#chapter { color:var(--dim); font-size:12px; letter-spacing:.08em; margin:0 0 10px }
+.closing { border-top:1px solid var(--line); margin-top:22px; padding-top:18px }
+.closing strong { color:var(--warm) }
